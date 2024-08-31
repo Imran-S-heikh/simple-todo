@@ -35,10 +35,10 @@ function ListItem({
         onClick={() => removeTask(task.id)}
         size="icon"
         variant="ghost"
-        className="h-auto w-auto px-4 opacity-0 hover:opacity-100 hover:bg-transparent group"
+        className="h-auto w-auto px-4 md:opacity-0 hover:opacity-100 hover:bg-transparent group"
       >
         <span className="group-active:opacity-50">
-          <IconCross className="pointer-events-none" />
+          <IconCross className="pointer-events-none fill-muted" />
         </span>
       </Button>
     </div>

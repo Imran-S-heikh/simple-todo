@@ -19,7 +19,7 @@ function TaskFooter() {
       <h4 className="ml-3 text-muted flex">
         <span className="min-w-4 block">{active}</span> items left
       </h4>
-      <div className="hidden sm:block">
+      <div className="hidden md:block">
         <TaskFilter />
       </div>
       <Button variant="ghost" onClick={clearCompleted}>

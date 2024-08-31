@@ -13,7 +13,7 @@ function BackgroundImage() {
         src={resolvedTheme === "dark" ? darkImage : lightImage}
         width={1400}
         height={900}
-        className="w-full"
+        className="w-full sm:min-h-0 min-h-[30vh] object-cover"
         alt="Backgournd Image"
       />
     </div>
