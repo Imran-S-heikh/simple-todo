@@ -1,8 +1,8 @@
-import pwa from "next-pwa";
+import pwa from "@ducanh2912/next-pwa";
 
 const withPWA = pwa({
   dest: "public",
-  disable: false,
+  disable: false
 });
 
 /** @type {import('next').NextConfig} */
