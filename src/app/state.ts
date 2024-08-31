@@ -17,9 +17,18 @@ export enum TaskFilterType {
   COMPLETED = "COMPLETED",
 }
 
+export const TASKS_KEY = "TASKS";
+
 export const TasksState = atom<Task[]>({
   key: "TASKS_STATE",
-  default: [],
+  default: JSON.parse(localStorage.getItem(TASKS_KEY) || "[]"),
+  effects: [
+    ({ onSet }) => {
+      onSet((tasks) => {
+        localStorage.setItem(TASKS_KEY, JSON.stringify(tasks || []));
+      });
+    },
+  ],
 });
 
 export const TasksActions = selector({
