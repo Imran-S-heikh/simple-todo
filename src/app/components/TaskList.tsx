@@ -8,14 +8,14 @@ import {
   Draggable,
   Droppable,
   DropResult,
-  OnDragEndResponder,
 } from "@hello-pangea/dnd";
 import Hide from "@/components/Hide";
 import { useRecoilValue } from "recoil";
-import { TasksActions, TasksState } from "../state";
+import { TasksActions, TasksFilteredState } from "../state";
+import TaskFooter from "./TasksFooterActions";
 
 function TaskList() {
-  const tasks = useRecoilValue(TasksState);
+  const tasks = useRecoilValue(TasksFilteredState);
   const { replaceTask } = useRecoilValue(TasksActions);
 
   function handleDragEnd({ destination, source }: DropResult) {
@@ -54,12 +54,7 @@ function TaskList() {
                           task={task}
                         />
                       </div>
-                      <Hide
-                        open={
-                          index !== tasks.length - 1 &&
-                          !(index == 0 && snap.isDragging)
-                        }
-                      >
+                      <Hide open={!(index == 0 && snap.isDragging)}>
                         <Separator />
                       </Hide>
                     </Fragment>
@@ -71,6 +66,7 @@ function TaskList() {
           )}
         </Droppable>
       </DragDropContext>
+      <TaskFooter />
     </div>
   );
 }

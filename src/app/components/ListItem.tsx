@@ -16,17 +16,21 @@ function ListItem({
   dragging?: boolean;
   task: Task;
 }) {
-  const { removeTask } = useRecoilValue(TasksActions);
+  const { removeTask, toggleTask } = useRecoilValue(TasksActions);
 
   return (
     <div
       className={cn(
-        "flex h-14 items-stretch bg-card rounded-lg duration-150",
+        "flex min-h-14 items-stretch bg-card rounded-lg duration-150",
         className
       )}
     >
-      <GradientIcon childClass={dragging && "bg-primary border-white"} />
-      <p className="flex-1 h-auto my-auto">{task.name}</p>
+      <GradientIcon
+        onClick={() => toggleTask(task.id)}
+        childClass={dragging && "bg-primary border-white"}
+        active={task.completed}
+      />
+      <p className="flex-1 h-auto my-auto py-2">{task.name}</p>
       <Button
         onClick={() => removeTask(task.id)}
         size="icon"

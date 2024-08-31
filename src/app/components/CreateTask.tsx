@@ -11,12 +11,14 @@ function CreateTask() {
   const { addTask } = useRecoilValue(TasksActions);
 
   function handleAdd() {
-    addTask(task);
-    setTask("");
+    if (task) {
+      addTask(task);
+      setTask("");
+    }
   }
 
   return (
-    <div className="flex bg-card text-card-foreground rounded-lg items-stretch h-16 ">
+    <div className="flex bg-card text-card-foreground rounded-lg items-stretch h-16 shadow ">
       <GradientIcon onClick={handleAdd} className="active:opacity-50" />
       <Input
         value={task}
