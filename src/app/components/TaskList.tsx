@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Fragment } from "react";
+import React, { Fragment, useEffect } from "react";
 import ListItem from "./ListItem";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -10,13 +10,19 @@ import {
   DropResult,
 } from "@hello-pangea/dnd";
 import Hide from "@/components/Hide";
-import { useRecoilValue } from "recoil";
-import { TasksActions, TasksFilteredState } from "../state";
+import { useRecoilValue, useSetRecoilState } from "recoil";
+import { TasksActions, TasksFilteredState, TasksState } from "../state";
 import TaskFooter from "./TasksFooterActions";
 
 function TaskList() {
   const tasks = useRecoilValue(TasksFilteredState);
+  const setTasks = useSetRecoilState(TasksState);
   const { replaceTask } = useRecoilValue(TasksActions);
+
+  useEffect(() => {
+    const tasks = JSON.parse(localStorage.getItem("TASKS") || "[]");
+    setTasks(tasks);
+  }, [setTasks]);
 
   function handleDragEnd({ destination, source }: DropResult) {
     if (destination) {

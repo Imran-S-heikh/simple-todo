@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import BackgroundImage from "./components/BackgroundImage";
 import CreateTask from "./components/CreateTask";
 import TaskFilter from "./components/TaskFilter";

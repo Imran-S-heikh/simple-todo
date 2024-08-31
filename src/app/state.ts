@@ -21,7 +21,7 @@ export const TASKS_KEY = "TASKS";
 
 export const TasksState = atom<Task[]>({
   key: "TASKS_STATE",
-  default: JSON.parse(localStorage.getItem(TASKS_KEY) || "[]"),
+  default:[],
   effects: [
     ({ onSet }) => {
       onSet((tasks) => {
