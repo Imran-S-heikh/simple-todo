@@ -6,7 +6,7 @@ import ThemeSwitch from "./components/ThemeSwitch";
 
 export default function Home() {
   return (
-    <main className="block min-h-screen relative">
+    <main className="block min-h-screen relative mb-5">
       <BackgroundImage />
 
       <section className="relative z-50 max-w-[540px] mx-auto pt-20 px-6">
