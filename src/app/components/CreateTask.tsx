@@ -23,8 +23,9 @@ function CreateTask() {
       <Input
         value={task}
         onChange={(e) => setTask(e.currentTarget.value)}
-        className="flex-1 bg-transparent h-auto border-none text-base px-0"
+        className="flex-1 bg-transparent h-auto border-none text-base pl-0"
         placeholder="Task Name..."
+        onKeyUp={e=> e.key === "Enter" && handleAdd()}
       />
     </div>
   );
