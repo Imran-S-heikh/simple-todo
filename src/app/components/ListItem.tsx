@@ -4,8 +4,9 @@ import { cn } from "@/lib/utils";
 import { ClassValue } from "clsx";
 import React from "react";
 import GradientIcon from "./GradientIcon";
-import { Task, TasksActions } from "../state";
+import { TasksActions } from "../state";
 import { useRecoilValue } from "recoil";
+import { Task } from "@/lib/types";
 
 function ListItem({
   className,

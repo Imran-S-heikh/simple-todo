@@ -1,10 +1,8 @@
-import { atom, selector } from "recoil";
-
-export interface Task {
-  id: number;
-  name: string;
-  completed: boolean;
-}
+import { getTodos, insertTodo } from "@/lib/database";
+import { auth } from "@/lib/firebase";
+import { Task, UserInfo } from "@/lib/types";
+import { onAuthStateChanged } from "firebase/auth";
+import { atom, atomFamily, selector } from "recoil";
 
 interface ReplaceProps {
   sourceIndex: number;
@@ -19,57 +17,83 @@ export enum TaskFilterType {
 
 export const TASKS_KEY = "TASKS";
 
-export const TasksState = atom<Task[]>({
+export const TasksState = atomFamily<Task[], string | undefined>({
   key: "TASKS_STATE",
-  default:[],
-  effects: [
-    ({ onSet }) => {
-      onSet((tasks) => {
-        localStorage.setItem(TASKS_KEY, JSON.stringify(tasks || []));
-      });
-    },
-  ],
+  default: (userId) =>
+    new Promise(async (set) => {
+      if (!userId) return set([] as never);
+
+      const todos = await getTodos(userId).catch(() => [] as never);
+
+      set(todos);
+    }),
+  // effects: [
+  //   ({ onSet }) => {
+  //     onSet((tasks) => {
+  //       // localStorage.setItem(TASKS_KEY, JSON.stringify(tasks || []));
+
+  //     });
+  //   },
+  // ],
 });
 
 export const TasksActions = selector({
   key: "TASKS_ACTIONS",
   get({ getCallback }) {
     const replaceTask = getCallback(
-      ({ set }) =>
-        ({ sourceIndex, targetIndex }: ReplaceProps) =>
-          set(TasksState, (pre) => {
-            const tasks = Array.from(pre);
-            const [dragged] = tasks.splice(sourceIndex, 1);
-            tasks.splice(targetIndex, 0, dragged);
-            return tasks;
-          })
+      ({ set, snapshot }) =>
+        async ({ sourceIndex, targetIndex }: ReplaceProps) => {
+          const user = await snapshot.getPromise(UserState);
+          if (user) {
+            set(TasksState(user?.uid), (pre) => {
+              const tasks = Array.from(pre);
+              const [dragged] = tasks.splice(sourceIndex, 1);
+              tasks.splice(targetIndex, 0, dragged);
+              return tasks;
+            });
+          }
+        }
     );
 
-    const addTask = getCallback(({ set }) => async (task: string) => {
-      set(TasksState, (pre) => [
-        ...pre,
-        {
-          id: Math.round(Math.random() * 100000000000000),
-          name: task,
-          completed: false,
-        },
-      ]);
+    const addTask = getCallback(({ set, snapshot }) => async (name: string) => {
+      const user = await snapshot.getPromise(UserState);
+      const task = {
+        id: Date.now().toString(),
+        name,
+        completed: false,
+        createdAt: Date.now(),
+      };
+      user && insertTodo(user.uid, task);
+      set(TasksState(user?.uid), (pre) => [...pre, task]);
     });
 
-    const removeTask = getCallback(({ set }) => async (id: number) => {
-      set(TasksState, (pre) => pre.filter((task) => task.id !== id));
-    });
+    const removeTask = getCallback(
+      ({ set, snapshot }) =>
+        async (id: string) => {
+          const user = await snapshot.getPromise(UserState);
+          set(TasksState(user?.uid), (pre) =>
+            pre.filter((task) => task.id !== id)
+          );
+        }
+    );
 
-    const toggleTask = getCallback(({ set }) => (id: number) => {
-      set(TasksState, (pre) =>
-        [...pre].map((task) =>
-          task.id === id ? { ...task, completed: !task.completed } : task
-        )
+    const toggleTask = getCallback(
+      ({ set, snapshot }) =>
+        async (id: string) => {
+          const user = await snapshot.getPromise(UserState);
+          set(TasksState(user?.uid), (pre) =>
+            [...pre].map((task) =>
+              task.id === id ? { ...task, completed: !task.completed } : task
+            )
+          );
+        }
+    );
+
+    const clearCompleted = getCallback(({ set, snapshot }) => async () => {
+      const user = await snapshot.getPromise(UserState);
+      set(TasksState(user?.uid), (pre) =>
+        [...pre].filter((task) => !task.completed)
       );
-    });
-
-    const clearCompleted = getCallback(({ set }) => () => {
-      set(TasksState, (pre) => [...pre].filter((task) => !task.completed));
     });
 
     return {
@@ -90,7 +114,8 @@ export const TaskFilterState = atom({
 export const TasksFilteredState = selector({
   key: "TASKS_FILTERED_STATE",
   get({ get }) {
-    const tasks = get(TasksState);
+    const user = get(UserState);
+    const tasks = get(TasksState(user?.uid));
     const filter = get(TaskFilterState);
 
     switch (filter) {
@@ -107,11 +132,33 @@ export const TasksFilteredState = selector({
 export const TasksStatsState = selector({
   key: "TASKS_STATS_STATE",
   get({ get }) {
-    const tasks = get(TasksState);
+    const user = get(UserState);
+    const tasks = get(TasksState(user?.uid));
     const active = tasks.filter((task) => !task.completed).length;
     return {
       active,
       completed: tasks.length - active,
     };
   },
+});
+
+export const UserState = atom<UserInfo | null>({
+  key: "USER_STATE",
+  default: null,
+  effects: [
+    ({ setSelf }) => {
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          setSelf({
+            uid: user.uid,
+            displayName: user.displayName!,
+            email: user.email!,
+            photoURL: user.photoURL!,
+          });
+        } else {
+          setSelf(null);
+        }
+      });
+    },
+  ],
 });

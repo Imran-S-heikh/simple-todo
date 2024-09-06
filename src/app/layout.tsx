@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { Josefin_Sans as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
-import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
-import RecoilProvider from "@/components/RecoilProvider";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -62,18 +60,7 @@ export default function RootLayout({
           "min-h-screen bg-background font-sans antialiased",
           fontSans.variable
         )}
-      >
-        <RecoilProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            {children}
-          </ThemeProvider>
-        </RecoilProvider>
-      </body>
+      >{children}</body>
     </html>
   );
 }
