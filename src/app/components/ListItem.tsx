@@ -27,7 +27,7 @@ function ListItem({
       )}
     >
       <GradientIcon
-        onClick={() => toggleTask(task.id)}
+        onClick={() => toggleTask(task.id,!task.completed)}
         childClass={dragging && "bg-primary border-white"}
         active={task.completed}
       />

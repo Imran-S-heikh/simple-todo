@@ -1,8 +1,15 @@
-import { getTodos, insertTodo } from "@/lib/database";
+import {
+  deleteTodo,
+  getTodos,
+  insertTodo,
+  todosRef,
+  updateTodo,
+} from "@/lib/database";
 import { auth } from "@/lib/firebase";
 import { Task, UserInfo } from "@/lib/types";
 import { onAuthStateChanged } from "firebase/auth";
-import { atom, atomFamily, selector } from "recoil";
+import { collection, onSnapshot, query } from "firebase/firestore";
+import { atom, atomFamily, DefaultValue, selector } from "recoil";
 
 interface ReplaceProps {
   sourceIndex: number;
@@ -27,14 +34,61 @@ export const TasksState = atomFamily<Task[], string | undefined>({
 
       set(todos);
     }),
-  // effects: [
-  //   ({ onSet }) => {
-  //     onSet((tasks) => {
-  //       // localStorage.setItem(TASKS_KEY, JSON.stringify(tasks || []));
 
-  //     });
-  //   },
-  // ],
+  effects(userId) {
+    return [
+      ({ setSelf, getPromise, node }) => {
+        if (userId) {
+          onSnapshot(query(todosRef(userId)), (snapshot) => {
+            snapshot.docChanges().forEach(async (change) => {
+              if (change.type === "added") {
+                await getPromise(node);
+                setSelf((pre) => {
+                  if (
+                    pre instanceof DefaultValue ||
+                    pre.find((item) => item.id === change.doc.id)
+                  ) {
+                    return pre;
+                  }
+                  const newTask = {
+                    id: change.doc.id,
+                    ...change.doc.data(),
+                  } as Task;
+                  return [...pre, newTask];
+                });
+              }
+
+              if (change.type === "removed") {
+                return setSelf((pre) => {
+                  if (pre instanceof DefaultValue) {
+                    return pre;
+                  }
+                  return pre.filter((task) => task.id !== change.doc.id);
+                });
+              }
+
+              if (change.type === "modified") {
+                setSelf((pre) => {
+                  if (pre instanceof DefaultValue) {
+                    return pre;
+                  }
+                  const modifiedTask = {
+                    id: change.doc.id,
+                    ...change.doc.data(),
+                  } as Task;
+                  return [
+                    ...pre.map((task) =>
+                      task.id === modifiedTask.id ? modifiedTask : task
+                    ),
+                  ];
+                });
+              }
+            });
+          });
+        }
+      },
+    ];
+  },
 });
 
 export const TasksActions = selector({
@@ -58,34 +112,34 @@ export const TasksActions = selector({
     const addTask = getCallback(({ set, snapshot }) => async (name: string) => {
       const user = await snapshot.getPromise(UserState);
       const task = {
-        id: Date.now().toString(),
         name,
         completed: false,
         createdAt: Date.now(),
       };
       user && insertTodo(user.uid, task);
-      set(TasksState(user?.uid), (pre) => [...pre, task]);
     });
 
     const removeTask = getCallback(
       ({ set, snapshot }) =>
         async (id: string) => {
           const user = await snapshot.getPromise(UserState);
-          set(TasksState(user?.uid), (pre) =>
-            pre.filter((task) => task.id !== id)
-          );
+          user && deleteTodo(user.uid, id);
+          // set(TasksState(user?.uid), (pre) =>
+          //   pre.filter((task) => task.id !== id)
+          // );
         }
     );
 
     const toggleTask = getCallback(
       ({ set, snapshot }) =>
-        async (id: string) => {
+        async (id: string, state: boolean) => {
           const user = await snapshot.getPromise(UserState);
-          set(TasksState(user?.uid), (pre) =>
-            [...pre].map((task) =>
-              task.id === id ? { ...task, completed: !task.completed } : task
-            )
-          );
+          user && updateTodo(user.uid, id, { completed: state });
+          // set(TasksState(user?.uid), (pre) =>
+          //   [...pre].map((task) =>
+          //     task.id === id ? { ...task, completed: !task.completed } : task
+          //   )
+          // );
         }
     );
 
