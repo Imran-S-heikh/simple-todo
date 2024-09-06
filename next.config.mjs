@@ -3,7 +3,7 @@ import { svgHandler } from "./loaders.mjs";
 
 const withPWA = pwa({
   dest: "public",
-  disable: true,
+  disable: process.env.NODE_ENV === "development",
 });
 
 /** @type {import('next').NextConfig} */
