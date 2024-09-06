@@ -32,6 +32,8 @@ export async function updateTodo(
   return await updateDoc(ref, data);
 }
 
+export const todoRef = (userId: string, todoId: string) =>
+  doc(db, USERS, userId, TODOS, todoId);
 export const todosRef = (userId: string) =>
   collection(db, USERS, userId, TODOS);
 export async function getTodos(userId: string) {

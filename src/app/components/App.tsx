@@ -7,15 +7,14 @@ import TaskFilter from "./TaskFilter";
 import TaskList from "./TaskList";
 import ThemeSwitch from "./ThemeSwitch";
 import Profile from "./Profile";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
-import Hide from "@/components/Hide";
 import TaskListSkeleton from "./TaskListSkeleton";
+import SyncLocalStore from "./SyncLocalState";
 
 export default function App() {
   return (
     <main className="block min-h-screen relative mb-5">
       <BackgroundImage />
+      <SyncLocalStore />
 
       <section className="relative z-50 max-w-[540px] mx-auto pt-20 px-6">
         <div className="flex justify-between items-center">

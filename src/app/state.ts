@@ -8,8 +8,9 @@ import {
 import { auth } from "@/lib/firebase";
 import { Task, UserInfo } from "@/lib/types";
 import { onAuthStateChanged } from "firebase/auth";
-import { collection, onSnapshot, query } from "firebase/firestore";
+import { onSnapshot, query } from "firebase/firestore";
 import { atom, atomFamily, DefaultValue, selector } from "recoil";
+import { nanoid } from "nanoid";
 
 interface ReplaceProps {
   sourceIndex: number;
@@ -28,7 +29,9 @@ export const TasksState = atomFamily<Task[], string | undefined>({
   key: "TASKS_STATE",
   default: (userId) =>
     new Promise(async (set) => {
-      if (!userId) return set([] as never);
+      if (!userId) {
+        return set(JSON.parse(localStorage.getItem(TASKS_KEY) || "[]"));
+      }
 
       const todos = await getTodos(userId).catch(() => [] as never);
 
@@ -87,6 +90,13 @@ export const TasksState = atomFamily<Task[], string | undefined>({
           });
         }
       },
+      ({ onSet }) => {
+        if (!userId) {
+          onSet((newVal) => {
+            localStorage.setItem(TASKS_KEY, JSON.stringify(newVal));
+          });
+        }
+      },
     ];
   },
 });
@@ -116,17 +126,33 @@ export const TasksActions = selector({
         completed: false,
         createdAt: Date.now(),
       };
-      user && insertTodo(user.uid, task);
+      if (user) {
+        insertTodo(user.uid, task);
+      } else {
+        set(TasksState(undefined), (pre) => {
+          return [
+            ...pre,
+            {
+              id: nanoid(),
+              ...task,
+              local: true,
+            },
+          ];
+        });
+      }
     });
 
     const removeTask = getCallback(
       ({ set, snapshot }) =>
         async (id: string) => {
           const user = await snapshot.getPromise(UserState);
-          user && deleteTodo(user.uid, id);
-          // set(TasksState(user?.uid), (pre) =>
-          //   pre.filter((task) => task.id !== id)
-          // );
+          if (user) {
+            deleteTodo(user.uid, id);
+          } else {
+            set(TasksState(undefined), (pre) =>
+              pre.filter((task) => task.id !== id)
+            );
+          }
         }
     );
 
@@ -134,12 +160,15 @@ export const TasksActions = selector({
       ({ set, snapshot }) =>
         async (id: string, state: boolean) => {
           const user = await snapshot.getPromise(UserState);
-          user && updateTodo(user.uid, id, { completed: state });
-          // set(TasksState(user?.uid), (pre) =>
-          //   [...pre].map((task) =>
-          //     task.id === id ? { ...task, completed: !task.completed } : task
-          //   )
-          // );
+          if (user) {
+            updateTodo(user.uid, id, { completed: state });
+          } else {
+            set(TasksState(undefined), (pre) =>
+              [...pre].map((task) =>
+                task.id === id ? { ...task, completed: state } : task
+              )
+            );
+          }
         }
     );
 
