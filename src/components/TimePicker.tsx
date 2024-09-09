@@ -113,7 +113,7 @@ function TimePicker({
 
   useEffect(() => {
     if (selected) {
-      onSelect?.(selected.value + Date.now());
+      onSelect?.(selected.value);
     } else {
       onSelect?.(null);
     }

@@ -13,18 +13,19 @@ interface NotificationInfo {
 function generateInfo(task: Task) {
   const info: [null | NotificationInfo, null | NotificationInfo] = [null, null];
 
-  if (!task.endTime || task.completed) {
+  if (!task.endTime || task.completed || !task.startDate) {
     return info;
   }
   // Check if the current time is between 50% and 75% of the time remaining
-  const totalTime = task.endTime - task.createdAt; 
-  const timeRemaining = task.endTime - Date.now(); 
-  const timeElapsed = totalTime - timeRemaining; 
-  const parcent = (100 / totalTime) * timeElapsed; 
-  const halfwayTime = totalTime / 2; 
-  const timeToHalf = halfwayTime - timeElapsed; 
-  const timeNintyFive = (totalTime / 100) * 95; 
-  const timeToNintyFive = timeNintyFive - timeElapsed; 
+  const endDate = task.startDate + task.endTime;
+  const totalTime = task.endTime;
+  const timeRemaining = endDate - Date.now();
+  const timeElapsed = totalTime - timeRemaining;
+  const parcent = (100 / totalTime) * timeElapsed;
+  const halfwayTime = totalTime / 2;
+  const timeToHalf = halfwayTime - timeElapsed;
+  const timeNintyFive = (totalTime / 100) * 95;
+  const timeToNintyFive = timeNintyFive - timeElapsed;
 
   if (parcent < 75) {
     info[0] = {
@@ -48,11 +49,12 @@ function generateInfo(task: Task) {
 }
 
 export function createNotification(task: Task) {
-  if (!task.endTime || task.completed) {
+  if (!task.endTime || task.completed || !task.startDate) {
     return;
   }
 
-  const diff = task.endTime - Date.now();
+  const endDate = task.startDate + task.endTime;
+  const diff = endDate - Date.now();
   if (diff <= 0) {
     return;
   }

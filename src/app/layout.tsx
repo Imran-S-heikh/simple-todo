@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     countryName: "Bangladesh",
     description:
       "A simple todo app with a clean, single-page interface to help you manage your tasks efficiently",
-    title: "Simple Todo | Imran Shaikh",
+    title: "Simple Todo",
     alternateLocale: "bn_BD",
     siteName: "Simple Todo",
     images: ["/og.png"],

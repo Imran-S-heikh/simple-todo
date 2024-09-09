@@ -19,7 +19,7 @@ function ListItem({
   dragging?: boolean;
   task: Task;
 }) {
-  const { removeTask, toggleTask } = useRecoilValue(TasksActions);
+  const { removeTask, toggleTask, startTask } = useRecoilValue(TasksActions);
   const [time, setTime] = useState("");
 
   React.useEffect(() => {
@@ -28,8 +28,9 @@ function ListItem({
     }
 
     const interval = setInterval(() => {
-      if (task.endTime) {
-        const diff = task.endTime - Date.now();
+      if (task.endTime && task.startDate) {
+        const endDate = task.startDate + task.endTime;
+        const diff = endDate - Date.now();
         if (diff > 0) {
           setTime(timeRemain(diff, 2));
         } else {
@@ -42,7 +43,7 @@ function ListItem({
     return () => {
       clearInterval(interval);
     };
-  }, [task.endTime, task.completed]);
+  }, [task.endTime, task.completed, task.startDate]);
 
   return (
     <div
@@ -57,6 +58,9 @@ function ListItem({
         active={task.completed}
       />
       <p className="flex-1 h-auto my-auto py-2">{task.name}</p>
+      <Hide open={Boolean(task.endTime && !task.completed && !task.startDate)}>
+        <Button onClick={() => startTask(task.id)}>Start</Button>
+      </Hide>
       <Hide open={time}>
         <span>{time}</span>
       </Hide>

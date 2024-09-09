@@ -140,6 +140,7 @@ export const TasksActions = selector({
             completed: false,
             createdAt: Date.now(),
             endTime,
+            startDate: null,
           };
 
           if (user) {
@@ -196,12 +197,26 @@ export const TasksActions = selector({
       );
     });
 
+    const startTask = getCallback(({ set, snapshot }) => async (id: string) => {
+      const user = await snapshot.getPromise(UserState);
+      if (user) {
+        updateTodo(user.uid, id, { startDate: Date.now() });
+      } else {
+        set(TasksState(undefined), (pre) =>
+          [...pre].map((task) =>
+            task.id === id ? { ...task, startDate: Date.now() } : task
+          )
+        );
+      }
+    });
+
     return {
       replaceTask,
       addTask,
       removeTask,
       toggleTask,
       clearCompleted,
+      startTask,
     };
   },
 });
