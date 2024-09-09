@@ -11,6 +11,8 @@ import { onAuthStateChanged } from "firebase/auth";
 import { onSnapshot, query } from "firebase/firestore";
 import { atom, atomFamily, DefaultValue, selector } from "recoil";
 import { nanoid } from "nanoid";
+import { Schedule } from "@/lib/schedule";
+import { createNotification } from "@/lib/notification";
 
 interface ReplaceProps {
   sourceIndex: number;
@@ -97,6 +99,16 @@ export const TasksState = atomFamily<Task[], string | undefined>({
           });
         }
       },
+      ({ onSet }) => {
+        onSet((newVal) => {
+          // check if user allowed notification
+          if (Notification.permission === "granted") {
+            newVal.forEach((task) => {
+              createNotification(task);
+            });
+          }
+        });
+      },
     ];
   },
 });
@@ -119,28 +131,33 @@ export const TasksActions = selector({
         }
     );
 
-    const addTask = getCallback(({ set, snapshot }) => async (name: string) => {
-      const user = await snapshot.getPromise(UserState);
-      const task = {
-        name,
-        completed: false,
-        createdAt: Date.now(),
-      };
-      if (user) {
-        insertTodo(user.uid, task);
-      } else {
-        set(TasksState(undefined), (pre) => {
-          return [
-            ...pre,
-            {
-              id: nanoid(),
-              ...task,
-              local: true,
-            },
-          ];
-        });
-      }
-    });
+    const addTask = getCallback(
+      ({ set, snapshot }) =>
+        async ({ name, endTime }: Pick<Task, "name" | "endTime">) => {
+          const user = await snapshot.getPromise(UserState);
+          const task = {
+            name,
+            completed: false,
+            createdAt: Date.now(),
+            endTime,
+          };
+
+          if (user) {
+            insertTodo(user.uid, task);
+          } else {
+            set(TasksState(undefined), (pre) => {
+              return [
+                ...pre,
+                {
+                  id: nanoid(),
+                  ...task,
+                  local: true,
+                },
+              ];
+            });
+          }
+        }
+    );
 
     const removeTask = getCallback(
       ({ set, snapshot }) =>

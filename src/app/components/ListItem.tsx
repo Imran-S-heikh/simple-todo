@@ -2,11 +2,13 @@ import IconCross from "@/assets/icons/IconCross";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ClassValue } from "clsx";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import GradientIcon from "./GradientIcon";
 import { TasksActions } from "../state";
 import { useRecoilValue } from "recoil";
 import { Task } from "@/lib/types";
+import Hide from "@/components/Hide";
+import { timeRemain } from "@/lib/time-difference";
 
 function ListItem({
   className,
@@ -18,20 +20,46 @@ function ListItem({
   task: Task;
 }) {
   const { removeTask, toggleTask } = useRecoilValue(TasksActions);
+  const [time, setTime] = useState("");
+
+  React.useEffect(() => {
+    if (!task.endTime || task.completed) {
+      return setTime("");
+    }
+
+    const interval = setInterval(() => {
+      if (task.endTime) {
+        const diff = task.endTime - Date.now();
+        if (diff > 0) {
+          setTime(timeRemain(diff, 2));
+        } else {
+          setTime("Time's up!");
+          clearInterval(interval);
+        }
+      }
+    }, 1000);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [task.endTime, task.completed]);
 
   return (
     <div
       className={cn(
-        "flex min-h-14 items-stretch bg-card rounded-lg duration-150",
+        "flex min-h-14 items-center bg-card rounded-lg duration-150",
         className
       )}
     >
       <GradientIcon
-        onClick={() => toggleTask(task.id,!task.completed)}
+        onClick={() => toggleTask(task.id, !task.completed)}
         childClass={dragging && "bg-primary border-white"}
         active={task.completed}
       />
       <p className="flex-1 h-auto my-auto py-2">{task.name}</p>
+      <Hide open={time}>
+        <span>{time}</span>
+      </Hide>
       <Button
         onClick={() => removeTask(task.id)}
         size="icon"

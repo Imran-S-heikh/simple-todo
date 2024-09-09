@@ -8,6 +8,7 @@ export interface Task {
   name: string;
   completed: boolean;
   createdAt: number;
+  endTime: number | null;
 }
 
 export type UserInfo = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import BackgroundImage from "./BackgroundImage";
 import CreateTask from "./CreateTask";
 import TaskFilter from "./TaskFilter";
@@ -11,6 +11,18 @@ import TaskListSkeleton from "./TaskListSkeleton";
 import SyncLocalStore from "./SyncLocalState";
 
 export default function App() {
+  useEffect(() => {
+    if ("Notification" in window) {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") {
+          console.log("Notification permission granted");
+        } else {
+          console.log("Notification permission denied");
+        }
+      });
+    }
+  }, []);
+
   return (
     <main className="block min-h-screen relative mb-5">
       <BackgroundImage />
